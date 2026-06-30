@@ -10,6 +10,10 @@ on:
 jobs:
   terraform-plan:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, stg, prod]
+        lifecycle: [network, eks-cluster]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,18 +24,21 @@ jobs:
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
-      - name: Terraform Init (network)
+      - name: Check if directory has changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            terraform:
+              - 'live/${{ matrix.environment }}/${{ matrix.lifecycle }}/**'
+              - 'modules/**'
+
+      - name: Terraform Init
+        if: steps.changes.outputs.terraform == 'true'
         run: terraform init -backend=false
-        working-directory: network/
+        working-directory: live/${{ matrix.environment }}/${{ matrix.lifecycle }}/
 
-      - name: Terraform Validate (network)
+      - name: Terraform Validate
+        if: steps.changes.outputs.terraform == 'true'
         run: terraform validate
-        working-directory: network/
-
-      - name: Terraform Init (eks-cluster)
-        run: terraform init -backend=false
-        working-directory: eks-cluster/
-
-      - name: Terraform Validate (eks-cluster)
-        run: terraform validate
-        working-directory: eks-cluster/
+        working-directory: live/${{ matrix.environment }}/${{ matrix.lifecycle }}/
