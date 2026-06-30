@@ -1,0 +1,37 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars"
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init (network)
+        run: terraform init -backend=false
+        working-directory: network/
+
+      - name: Terraform Validate (network)
+        run: terraform validate
+        working-directory: network/
+
+      - name: Terraform Init (eks-cluster)
+        run: terraform init -backend=false
+        working-directory: eks-cluster/
+
+      - name: Terraform Validate (eks-cluster)
+        run: terraform validate
+        working-directory: eks-cluster/
