@@ -34,7 +34,7 @@ module "eks" {
   source = "../../../modules/eks"
 
   cluster_name       = "${local.project_name}-eks"
-  cluster_version    = "1.29"
+  cluster_version    = "1.33"
   vpc_id             = data.terraform_remote_state.network.outputs.vpc_id
   subnet_ids         = data.terraform_remote_state.network.outputs.private_subnet_ids
   node_instance_type = "m5.large"
