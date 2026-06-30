@@ -1,0 +1,7 @@
+environment  = "dev"
+project_name = "myproject"
+owner        = "platform-team"
+aws_region   = "ap-northeast-2"
+state_bucket = "myproject-terraform-state-977099011692"
+cluster_name = "dev-myproject-eks"
+vpc_cidr     = "10.10.0.0/16"

@@ -27,3 +27,8 @@ output "external_dns_role_arn" {
   description = "External DNS IRSA Role ARN"
   value       = module.irsa_external_dns.role_arn
 }
+
+output "vpc_id" {
+  description = "VPC ID (from network remote state)"
+  value       = data.terraform_remote_state.network.outputs.vpc_id
+}
