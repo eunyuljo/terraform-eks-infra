@@ -2,29 +2,48 @@ name: Terraform Apply
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - "**/*.tf"
-      - "**/*.tfvars"
+      - "live/**/*.tf"
+      - "live/**/*.tfvars"
 
-# NOTE: 실제 환경에서는 manual approval step을 추가하는 것을 강력히 권장합니다.
-# GitHub Environments의 "Required reviewers" 기능을 활용하거나,
-# workflow_dispatch 트리거와 environment protection rules를 조합하여
-# 프로덕션 배포 전 수동 승인 단계를 구성하세요.
+# NOTE: 실제 운영 환경에서는 아래 사항을 권장합니다:
+# 1. environment protection rules 설정 (수동 승인 필요)
+# 2. prod는 별도 approval workflow 분리
+# 3. AWS credentials는 OIDC로 연동 (secrets 대신)
 
 jobs:
-  terraform-apply:
+  detect-changes:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed environments
+        id: set-matrix
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'live/' | grep '\.tf$' | cut -d'/' -f2,3 | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0)) | map(split("/") | {environment: .[0], lifecycle: .[1]})')
+          echo "matrix={\"include\":$CHANGED}" >> $GITHUB_OUTPUT
+
+  terraform-apply:
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+    # environment: ${{ matrix.environment }}  # Enable for protection rules
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
         run: terraform init
+        working-directory: live/${{ matrix.environment }}/${{ matrix.lifecycle }}/
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
+        working-directory: live/${{ matrix.environment }}/${{ matrix.lifecycle }}/
