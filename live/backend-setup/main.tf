@@ -9,12 +9,9 @@
 ################################################################################
 
 locals {
-  project_name = "myproject"
-  aws_region   = "ap-northeast-2"
-  account_id   = "977099011692"
-
-  bucket_name    = "${local.project_name}-terraform-state-${local.account_id}"
-  dynamodb_table = "${local.project_name}-terraform-lock"
+  aws_region     = var.aws_region
+  bucket_name    = "${var.project_name}-terraform-state-${var.account_id}"
+  dynamodb_table = "${var.project_name}-terraform-lock"
 }
 
 ################################################################################

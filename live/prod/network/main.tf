@@ -2,16 +2,11 @@
 # Prod - Network
 ################################################################################
 locals {
-  environment  = "prod"
-  project_name = "myproject"
-  owner        = "platform-team"
-  aws_region   = "ap-northeast-2"
-
   common_tags = {
-    Environment = local.environment
+    Environment = var.environment
     ManagedBy   = "terraform"
-    Project     = local.project_name
-    Owner       = local.owner
+    Project     = var.project_name
+    Owner       = var.owner
   }
 }
 
@@ -21,11 +16,11 @@ locals {
 module "vpc" {
   source = "../../../modules/vpc"
 
-  vpc_cidr             = "10.30.0.0/16"
-  environment          = local.environment
-  cluster_name         = "${local.project_name}-eks"
-  public_subnet_cidrs  = ["10.30.1.0/24", "10.30.2.0/24", "10.30.3.0/24"]
-  private_subnet_cidrs = ["10.30.11.0/24", "10.30.12.0/24", "10.30.13.0/24"]
+  vpc_cidr             = var.vpc_cidr
+  environment          = var.environment
+  cluster_name         = "${var.project_name}-eks"
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
   tags                 = local.common_tags
 }
 
@@ -35,17 +30,17 @@ module "vpc" {
 module "bastion_sg" {
   source = "../../../modules/security-group"
 
-  name        = "${local.environment}-${local.project_name}-bastion-sg"
+  name        = "${var.environment}-${var.project_name}-bastion-sg"
   description = "Security group for bastion host - restricted access"
   vpc_id      = module.vpc.vpc_id
-  environment = local.environment
+  environment = var.environment
 
   ingress_rules = [
     {
       from_port   = 22
       to_port     = 22
       protocol    = "tcp"
-      cidr_blocks = ["10.30.0.0/16"]
+      cidr_blocks = [var.vpc_cidr]
       description = "SSH access from internal network only"
     }
   ]
@@ -69,10 +64,10 @@ module "bastion_sg" {
 module "alb_sg" {
   source = "../../../modules/security-group"
 
-  name        = "${local.environment}-${local.project_name}-alb-sg"
+  name        = "${var.environment}-${var.project_name}-alb-sg"
   description = "Security group for Application Load Balancer"
   vpc_id      = module.vpc.vpc_id
-  environment = local.environment
+  environment = var.environment
 
   ingress_rules = [
     {
@@ -89,7 +84,7 @@ module "alb_sg" {
       from_port   = 0
       to_port     = 0
       protocol    = "-1"
-      cidr_blocks = ["10.30.0.0/16"]
+      cidr_blocks = [var.vpc_cidr]
       description = "Outbound to internal network only"
     }
   ]

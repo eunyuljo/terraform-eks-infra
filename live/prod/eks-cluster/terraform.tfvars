@@ -1,0 +1,10 @@
+environment        = "prod"
+project_name       = "myproject"
+owner              = "platform-team"
+aws_region         = "ap-northeast-2"
+cluster_version    = "1.29"
+node_instance_type = "m5.xlarge"
+node_min_size      = 3
+node_max_size      = 10
+node_desired_size  = 5
+state_bucket       = "myproject-terraform-state-977099011692"
