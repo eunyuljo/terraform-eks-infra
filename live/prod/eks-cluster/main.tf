@@ -36,15 +36,42 @@ module "eks" {
   source = "../../../modules/eks"
 
   cluster_name       = "${local.project_name}-eks"
-  cluster_version    = "1.29"
+  cluster_version    = "1.30"
   vpc_id             = data.terraform_remote_state.network.outputs.vpc_id
   subnet_ids         = data.terraform_remote_state.network.outputs.private_subnet_ids
-  node_instance_type = "m5.xlarge"
-  node_min_size      = 3
-  node_max_size      = 10
-  node_desired_size  = 5
+  node_instance_type = "m5.2xlarge"
+  node_min_size      = 5
+  node_max_size      = 20
+  node_desired_size  = 10
   environment        = local.environment
   tags               = local.common_tags
+}
+
+################################################################################
+# IAM Role - 임시 관리 작업용 (위험!)
+################################################################################
+resource "aws_iam_role" "admin_temp" {
+  name = "${local.environment}-${local.project_name}-admin-temp-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+      }
+    ]
+  })
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy_attachment" "admin_temp" {
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  role       = aws_iam_role.admin_temp.name
 }
 
 ################################################################################

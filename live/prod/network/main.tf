@@ -81,6 +81,13 @@ module "alb_sg" {
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
       description = "HTTPS from internet (fronted by WAF)"
+    },
+    {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "HTTP from internet for redirect"
     }
   ]
 
@@ -89,8 +96,42 @@ module "alb_sg" {
       from_port   = 0
       to_port     = 0
       protocol    = "-1"
-      cidr_blocks = ["10.30.0.0/16"]
-      description = "Outbound to internal network only"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "Allow all outbound traffic"
+    }
+  ]
+
+  tags = local.common_tags
+}
+
+################################################################################
+# Security Group - Debug (임시 트러블슈팅용 - 위험!)
+################################################################################
+module "debug_sg" {
+  source = "../../../modules/security-group"
+
+  name        = "${local.environment}-${local.project_name}-debug-sg"
+  description = "Temporary debug access"
+  vpc_id      = module.vpc.vpc_id
+  environment = local.environment
+
+  ingress_rules = [
+    {
+      from_port   = 0
+      to_port     = 65535
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = ""
+    }
+  ]
+
+  egress_rules = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "Allow all outbound"
     }
   ]
 
