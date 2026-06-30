@@ -15,6 +15,19 @@ data "terraform_remote_state" "eks" {
   }
 }
 
+################################################################################
+# Remote State - Network (VPC ID 참조)
+################################################################################
+data "terraform_remote_state" "network" {
+  backend = "s3"
+
+  config = {
+    bucket = var.state_bucket
+    key    = "${var.environment}/network/terraform.tfstate"
+    region = var.aws_region
+  }
+}
+
 data "aws_caller_identity" "current" {}
 
 ################################################################################
@@ -54,7 +67,7 @@ resource "helm_release" "aws_load_balancer_controller" {
 
   set {
     name  = "vpcId"
-    value = data.terraform_remote_state.eks.outputs.vpc_id
+    value = data.terraform_remote_state.network.outputs.vpc_id
   }
 
   depends_on = [data.terraform_remote_state.eks]
