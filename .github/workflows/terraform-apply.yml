@@ -1,0 +1,30 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars"
+
+# NOTE: 실제 환경에서는 manual approval step을 추가하는 것을 강력히 권장합니다.
+# GitHub Environments의 "Required reviewers" 기능을 활용하거나,
+# workflow_dispatch 트리거와 environment protection rules를 조합하여
+# 프로덕션 배포 전 수동 승인 단계를 구성하세요.
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve

@@ -1,0 +1,30 @@
+name: PR Review Checklist
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars"
+
+jobs:
+  review-checklist:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Run PR Review Checker
+        run: python -m scripts.pr_review_checker.main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
